@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+jar {
+
+    archivesBaseName = 'rabbit-load-tester'
+
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
+    manifest {
+        attributes 'Main-Class': 'org.ks.Main'
+        attributes("Implementation-Title": archiveBaseName,
+                "Built-Date": new Date())
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+version '1.0'
+
+sourceCompatibility = 11
+
+repositories {
+    maven { url "https://artifactory.vasdev.kyivstar.ua:443/artifactory/virtual" }
+}
+
+dependencies {
+    implementation group: 'com.rabbitmq', name: 'amqp-client', version: '5.17.0'
+
+}
