@@ -2,7 +2,6 @@ package org.ks;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import org.ks.dto.ProcessingResultDto;
 import org.ks.dto.PromiseDto;
 
@@ -24,38 +23,35 @@ import java.util.stream.IntStream;
 public class Main {
     public static void main(String[] args) throws InterruptedException {
         System.out.println("Main - START: " + LocalDateTime.now());
-        args = new String[]{"100", "3", "queueName", "exchanger", "routingKey"};
+        args = new String[]{"100", "3", "event.hub.load.test.q", "event.hub.exchanger", "event.hub.load.test.router"};
 
         if (args != null && args.length > 0) {
             var messageQuantity = Integer.parseInt(args[0]);
             var parallelism = Integer.parseInt(args[1]);
             var queueName = args[2];
-            var exchanger = args[3];
+            var exchangeName = args[3];
             var routingKey = args[4];
 
             LinkedBlockingDeque<PromiseDto> requestQueue = new LinkedBlockingDeque<>(messageQuantity);
             var loader = new Loader(requestQueue);
             var executor = Executors.newFixedThreadPool(parallelism);
             var availableParallelismSemaphore = new Semaphore(parallelism);
-            var factory = new ConnectionFactory();
-            factory.setHost("event-hub-test1");
-            factory.setPort(5672);
-            factory.setUsername("admin");
-            factory.setPassword("admin_pass");
-            factory.setVirtualHost(ConnectionFactory.DEFAULT_VHOST);
+            var messageHelper = new MessageHelper();
+            var factory = messageHelper.getConnectionFactory();
+
 
             for (int i = 0; i < messageQuantity; i++) {
                 var message = "message_" + i;
                 var futureResult = loader.send(message);
 
             }
-            try (Connection connection = factory.newConnection();
+            try (Connection connection = factory.newConnection("event-hub_load_test");
                  Channel channel = connection.createChannel()) {
-                //channel.queueDeclare(queueName, false, false, false, null);
+                messageHelper.declareRabbitMqComponents(exchangeName, queueName, routingKey, channel);
 
                 var workers = IntStream.range(0, parallelism)
                         .mapToObj(idx -> new Sender(
-                                availableParallelismSemaphore, channel, requestQueue, queueName))
+                                availableParallelismSemaphore, channel, requestQueue, queueName, exchangeName, routingKey))
                         .collect(Collectors.toList());
 
                 var results = executor.invokeAll(workers);

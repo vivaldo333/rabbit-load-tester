@@ -1,5 +1,6 @@
 package org.ks;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import org.ks.dto.ProcessingResultDto;
 import org.ks.dto.PromiseDto;
@@ -19,24 +20,38 @@ public class Sender implements Callable<List<ProcessingResultDto>> {
     private Semaphore semaphore;
     private Channel channel;
     private LinkedBlockingDeque<PromiseDto> requestQueue;
+    private String exchangeName;
     private String queueName;
+    private String routingKey;
     private MessageMapper messageMapper;
+    private MessageHelper messageHelper;
 
-    public Sender(Semaphore semaphore, Channel channel, LinkedBlockingDeque<PromiseDto> requestQueue, String queueName) {
+    public Sender(Semaphore semaphore,
+                  Channel channel,
+                  LinkedBlockingDeque<PromiseDto> requestQueue,
+                  String queueName,
+                  String exchangeName,
+                  String routingKey) {
         this.semaphore = semaphore;
         this.channel = channel;
         this.requestQueue = requestQueue;
         this.queueName = queueName;
+        this.exchangeName = exchangeName;
+        this.routingKey = routingKey;
         this.messageMapper = new MessageMapper();
+        this.messageHelper = new MessageHelper();
     }
 
     public void send(String message) throws IOException {
-
-        if (Integer.parseInt(message.substring(8)) % 2 == 0) {
-            throw new RuntimeException("eeeeee");
+        var messageBodyBytes = message.getBytes("UTF-8");
+        if (exchangeName != null && !exchangeName.isEmpty()) {
+            channel.basicPublish(exchangeName,
+                    routingKey,
+                    messageHelper.getMessageProperties(),
+                    messageBodyBytes);
+        } else {
+            channel.basicPublish("", this.queueName, null, messageBodyBytes);
         }
-
-        //channel.basicPublish("", this.queueName, null, message.getBytes("UTF-8"));
         System.out.println("Sender - sent - message: " + message);
     }
 
@@ -70,6 +85,9 @@ public class Sender implements Callable<List<ProcessingResultDto>> {
         }
         return processingResults;
     }
+
+
+
 
 
     private Optional<PromiseDto> getPromiseMessage() {
