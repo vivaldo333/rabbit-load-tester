@@ -23,7 +23,12 @@ import java.util.stream.IntStream;
 public class Main {
     public static void main(String[] args) throws InterruptedException {
         System.out.println("Main - START: " + LocalDateTime.now());
-        args = new String[]{"100", "3", "event.hub.load.test.q", "event.hub.exchanger", "event.hub.load.test.router"};
+        args = new String[]{
+                "1000000",
+                "1",
+                "event.hub.load.test.q",
+                "event.hub.exchanger",
+                "event.hub.load.test.router"};
 
         if (args != null && args.length > 0) {
             var messageQuantity = Integer.parseInt(args[0]);
@@ -42,7 +47,7 @@ public class Main {
 
             for (int i = 0; i < messageQuantity; i++) {
                 var message = "message_" + i;
-                var futureResult = loader.send(message);
+                loader.send(message);
 
             }
             try (Connection connection = factory.newConnection("event-hub_load_test");

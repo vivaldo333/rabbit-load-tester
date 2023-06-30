@@ -1,6 +1,7 @@
 package org.ks;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -16,7 +17,7 @@ public class MessageHelper {
                 .headers(getMessageHeaders())
                 .deliveryMode(2) //Non-persistent (1) or persistent (2)
                 .priority(0) //Message priority, 0 to 9
-                .expiration("180000") //TTL ms
+                //.expiration("61000") //TTL ms
                 .userId("admin")
                 .appId("event-hub")
                 .build();
@@ -29,10 +30,15 @@ public class MessageHelper {
     }
 
 
-    public void declareRabbitMqComponents(String exchangeName, String queueName, String routingKey, Channel channel) throws IOException {
-        declareDelayedExchanger(exchangeName, channel);
-        declareQuorumQueue(queueName, channel);
-        channel.queueBind(queueName, exchangeName, routingKey);
+    public void declareRabbitMqComponents(String exchangeName, String queueName, String routingKey, Channel channel) {
+        try {
+            declareDelayedExchanger(exchangeName, channel);
+            declareQuorumQueue(queueName, channel);
+            channel.queueBind(queueName, exchangeName, routingKey);
+        } catch (IOException e) {
+            System.out.println("Error: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     public void declareDelayedExchanger(String exchangeName, Channel channel) throws IOException {
@@ -56,9 +62,28 @@ public class MessageHelper {
         return factory;
     }
 
+    public ConnectionFactory getConnectionFactory(String host, int port) {
+        var factory = new ConnectionFactory();
+        factory.setHost(host);
+        factory.setPort(port);
+        factory.setUsername("admin");
+        factory.setPassword("admin_pass");
+        factory.setVirtualHost(ConnectionFactory.DEFAULT_VHOST);
+        //factory.setUri("amqp://userName:password@hostName:portNumber/virtualHost");
+        return factory;
+    }
+
+    public Address[] getHosts() {
+        return new Address[]{
+                new Address("event-hub-test1", 5672),
+                new Address("event-hub-test2", 5672),
+                new Address("event-hub-test3", 5672)
+        };
+    }
+
     private Map<String, Object> getQuorumQueueAttributes() {
         // https://www.rabbitmq.com/quorum-queues.html
-        Map<String, Object> args = new HashMap<String, Object>();
+        Map<String, Object> args = new HashMap<>();
         //x-max-length	Number
         //x-max-length-bytes	Number
         //x-overflow	"drop-head" or "reject-publish"
