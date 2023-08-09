@@ -2,10 +2,12 @@ package org.ks;
 
 import java.io.IOException;
 
-public class Main2 {
+public class MainProducer {
     public static void main(String[] args) throws IOException, InterruptedException {
+        var parallelism = 1;
+        var messageCount = 1_000_000;
         var loader = new GlobalLoader();
-        loader.load();
+        loader.load(parallelism, messageCount);
     }
 
     //loading 10-20-50-100 threads

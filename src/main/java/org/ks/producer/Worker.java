@@ -72,17 +72,21 @@ public class Worker implements Runnable, Closeable {
     }
 
     private void sendToChannel(String message) throws IOException {
-        System.out.println("send message: " + message);
-        var exchangeName = rabbitConfig.getExchangerName();
-        var routingKey = rabbitConfig.getRoutingKey();
-        var messageBodyBytes = getMessage(message);
-        if (exchangeName != null) {
-            channel.basicPublish(exchangeName,
-                    routingKey,
-                    messageHelper.getMessageProperties(),
-                    messageBodyBytes);
-        } else {
-            channel.basicPublish("", rabbitConfig.getQueueName(), null, messageBodyBytes);
+        try {
+            System.out.println("send message: " + message);
+            var exchangeName = rabbitConfig.getExchangerName();
+            var routingKey = rabbitConfig.getRoutingKey();
+            var messageBodyBytes = getMessage(message);
+            if (exchangeName != null) {
+                channel.basicPublish(exchangeName,
+                        routingKey,
+                        messageHelper.getMessageProperties(),
+                        messageBodyBytes);
+            } else {
+                channel.basicPublish("", rabbitConfig.getQueueName(), null, messageBodyBytes);
+            }
+        } catch (Exception ex) {
+            System.out.println("Error: " + ex.getMessage());
         }
         System.out.println(
                 "Worker" + Thread.currentThread().getName() + " - sendToChannel - message: " + message);

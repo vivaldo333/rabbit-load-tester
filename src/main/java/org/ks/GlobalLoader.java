@@ -17,9 +17,7 @@ public class GlobalLoader {
     private final AtomicInteger countUnsuccess = new AtomicInteger(0);
 
 
-    void load() throws InterruptedException, IOException {
-        var parallelism = 50;
-        var messageCount = 1000000;
+    void load(int parallelism, int messageCount) throws InterruptedException, IOException {
         var countDownLatch = new CountDownLatch(messageCount);
         var rabbitConfig = new RabbitConfigDto();
 

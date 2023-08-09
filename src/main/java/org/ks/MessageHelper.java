@@ -75,8 +75,8 @@ public class MessageHelper {
 
     public Address[] getHosts() {
         return new Address[]{
-                new Address("event-hub-test1", 5672),
-                new Address("event-hub-test2", 5672),
+                //new Address("event-hub-test1", 5672),
+                //new Address("event-hub-test2", 5672),
                 new Address("event-hub-test3", 5672)
         };
     }

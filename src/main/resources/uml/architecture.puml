@@ -1,0 +1,31 @@
+@startuml
+skinparam groupInheritance 4
+skinparam nodesep 5
+skinparam ranksep 10
+skinparam linetype polyline
+skinparam linetype ortho
+
+
+cloud rmq as "RabbitMQ Cluster" {
+node n1 as "event-hub-test1 \n        (master)" {
+}
+
+node n2 as "event-hub-test2" {
+}
+
+node n3 as "event-hub-test3" {
+}
+
+n1 ..[#blue]..> n2
+n1 ..[#blue]..> n3
+
+n2 ..[#red]..> n1
+n3 ..[#red]..> n1
+}
+
+
+
+
+
+
+@enduml
