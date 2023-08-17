@@ -27,7 +27,7 @@ public class GlobalLoader {
         for (int i = 0; i < messageCount; i++) {
             try {
                 semaphore.acquire();
-                var message = "test_message_" + i;
+                var message = /*"test_message_"*/ "" + i;
                 producer.send(message)
                         .thenAccept(result -> {
                             semaphore.release();
