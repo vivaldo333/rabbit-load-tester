@@ -61,7 +61,7 @@ public class MainSender {
 
                 var results = executor.invokeAll(workers);
                 results.stream()
-                        .map(res -> getProcessingResult(res))
+                        .map(MainSender::getProcessingResult)
                         .flatMap(List::stream)
                         .forEach(res -> {
                             if (res.isSuccess()) {
@@ -94,7 +94,7 @@ public class MainSender {
         }
     }
 
-    private static void awaitTerminationAfterShutdown(ExecutorService threadPool) {
+    public static void awaitTerminationAfterShutdown(ExecutorService threadPool) {
         threadPool.shutdown();
         try {
             if (!threadPool.awaitTermination(60, TimeUnit.SECONDS)) {

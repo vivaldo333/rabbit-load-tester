@@ -6,6 +6,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ks.MainConsumer.CONSUMED_COUNT;
@@ -23,7 +24,7 @@ public class Consumer extends DefaultConsumer {
                                Envelope envelope,
                                AMQP.BasicProperties properties,
                                byte[] body) throws IOException {
-        var message = new String(body);
+        var message = new String(body, StandardCharsets.UTF_8);
         if (EXPECTED_MESSAGES.containsKey(message)) {
             System.out.println("Global count consumed messages: " + CONSUMED_COUNT.incrementAndGet());
         }
@@ -32,6 +33,7 @@ public class Consumer extends DefaultConsumer {
         //var routingKey = envelope.getRoutingKey();
         //var contentType = properties.getContentType();
         long deliveryTag = envelope.getDeliveryTag();
+        //Acknowledge the message
         getChannel().basicAck(deliveryTag, false);
         var currentCountConsumedMessages = countConsumedMessages.incrementAndGet();
         System.out.println("Consumed message: " + currentCountConsumedMessages);
